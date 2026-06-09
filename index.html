@@ -34,7 +34,6 @@
 
     <div id="game" style="display:none;">
         <h2 id="roundTitle">第 <span id="round">1</span>/5 轮 - <span id="position">控球后卫</span></h2>
-        <div id="teamInfo" style="margin:15px; font-size:1.2em; color:#ffd700;"></div>
         
         <div class="player-pool" id="pool"></div>
         
@@ -52,45 +51,41 @@
 </div>
 
 <script>
-// ==================== 扩充后的球员数据库 ====================
+// ==================== 扩充后的球员数据库（含大量2025-26现役球员） ====================
 const playersDB = {
     "PG": [
         {name:"迈克尔·乔丹", team:"芝加哥公牛", era:"90s", rating:98},
         {name:"魔术师约翰逊", team:"洛杉矶湖人", era:"80s", rating:97},
         {name:"斯蒂芬·库里", team:"金州勇士", era:"2010s", rating:96},
-        {name:"卢卡·东契奇", team:"达拉斯独行侠", era:"2020s", rating:96},
-        {name:"奥斯卡·罗伯特森", team:"辛辛那提皇家", era:"60s", rating:95},
-        {name:"克里斯·保罗", team:"洛杉矶快船", era:"2010s", rating:93},
-        {name:"达米安·利拉德", team:"密尔沃基雄鹿", era:"2020s", rating:92}
+        {name:"卢卡·东契奇", team:"洛杉矶湖人", era:"2025-26", rating:97},
+        {name:"谢伊·吉尔杰斯-亚历山大", team:"俄克拉荷马雷霆", era:"2025-26", rating:97},
+        {name:"凯德·坎宁安", team:"底特律活塞", era:"2025-26", rating:95},
+        {name:"泰雷斯·马克西", team:"费城76人", era:"2025-26", rating:94}
     ],
     "SG": [
         {name:"科比·布莱恩特", team:"洛杉矶湖人", era:"2000s", rating:97},
         {name:"德文·布克", team:"菲尼克斯太阳", era:"2020s", rating:94},
-        {name:"克莱·汤普森", team:"金州勇士", era:"2010s", rating:92},
-        {name:"雷·阿伦", team:"波士顿凯尔特人", era:"2000s", rating:91},
-        {name:"雷吉·米勒", team:"印第安纳步行者", era:"90s", rating:90}
+        {name:"阿门·汤普森", team:"休斯顿火箭", era:"2025-26", rating:93},
+        {name:"德斯蒙德·贝恩", team:"奥兰多魔术", era:"2025-26", rating:92}
     ],
     "SF": [
-        {name:"勒布朗·詹姆斯", team:"洛杉矶湖人", era:"2010s-2020s", rating:99},
-        {name:"凯文·杜兰特", team:"菲尼克斯太阳", era:"2020s", rating:97},
+        {name:"勒布朗·詹姆斯", team:"洛杉矶湖人", era:"2010s-2020s", rating:96},
+        {name:"凯文·杜兰特", team:"休斯顿火箭", era:"2025-26", rating:96},
         {name:"拉里·伯德", team:"波士顿凯尔特人", era:"80s", rating:96},
-        {name:"杰森·塔图姆", team:"波士顿凯尔特人", era:"2020s", rating:94},
-        {name:"保罗·乔治", team:"费城76人", era:"2020s", rating:91}
+        {name:"杰森·塔图姆", team:"波士顿凯尔特人", era:"2020s", rating:94}
     ],
     "PF": [
-        {name:"蒂姆·邓肯", team:"圣安东尼奥马刺", era:"2000s", rating:96},
         {name:"扬尼斯·安特托孔波", team:"密尔沃基雄鹿", era:"2020s", rating:97},
-        {name:"卡尔·马龙", team:"犹他爵士", era:"90s", rating:94},
-        {name:"尼古拉·约基奇", team:"丹佛掘金", era:"2020s", rating:96},
-        {name:"凯文·加内特", team:"明尼苏达森林狼", era:"2000s", rating:95}
+        {name:"尼古拉·约基奇", team:"丹佛掘金", era:"2025-26", rating:97},
+        {name:"蒂姆·邓肯", team:"圣安东尼奥马刺", era:"2000s", rating:96},
+        {name:"贾巴里·史密斯", team:"休斯顿火箭", era:"2025-26", rating:92}
     ],
     "C": [
         {name:"沙奎尔·奥尼尔", team:"洛杉矶湖人", era:"2000s", rating:98},
         {name:"威尔特·张伯伦", team:"费城76人", era:"60s", rating:99},
-        {name:"卡里姆·阿布杜尔-贾巴尔", team:"洛杉矶湖人", era:"70s", rating:97},
+        {name:"维克托·文班亚马", team:"圣安东尼奥马刺", era:"2025-26", rating:96},
         {name:"乔尔·恩比德", team:"费城76人", era:"2020s", rating:95},
-        {name:"尼古拉·约基奇", team:"丹佛掘金", era:"2020s", rating:96},
-        {name:"安东尼·戴维斯", team:"洛杉矶湖人", era:"2020s", rating:93}
+        {name:"安东尼·戴维斯", team:"洛杉矶湖人", era:"2020s", rating:94}
     ]
 };
 
@@ -120,10 +115,12 @@ function nextRound() {
     const poolDiv = document.getElementById('pool');
     poolDiv.innerHTML = '';
     
-    const sample = playersDB[pos][Math.floor(Math.random() * playersDB[pos].length)];
-    document.getElementById('teamInfo').innerHTML = `当前可选：${sample.team} ${sample.era} 球员池`;
+    // 随机打乱并只取前3名
+    let pool = [...playersDB[pos]];
+    pool.sort(() => Math.random() - 0.5); // 随机排序
+    pool = pool.slice(0, 3); // 只保留3人
     
-    playersDB[pos].forEach(player => {
+    pool.forEach(player => {
         const card = document.createElement('div');
         card.className = 'player-card';
         card.innerHTML = `
@@ -152,14 +149,13 @@ function selectPlayer(player, card, pos) {
 
 function calculateChemistry() {
     let chemistry = 0;
-    // 简单相性加成（后卫、前锋、中锋搭配）
     const hasEliteGuard = selectedPlayers.some(p => (p.posKey === "PG" || p.posKey === "SG") && p.rating >= 95);
     const hasEliteBig = selectedPlayers.some(p => (p.posKey === "PF" || p.posKey === "C") && p.rating >= 95);
-    const hasStar = selectedPlayers.some(p => p.rating >= 97);
+    const hasStar = selectedPlayers.some(p => p.rating >= 96);
     
-    if (hasEliteGuard) chemistry += 4;
-    if (hasEliteBig) chemistry += 4;
-    if (hasStar) chemistry += 5;
+    if (hasEliteGuard) chemistry += 5;
+    if (hasEliteBig) chemistry += 5;
+    if (hasStar) chemistry += 6;
     
     return chemistry;
 }
@@ -175,26 +171,23 @@ function showResult() {
         lineupDiv.appendChild(div);
     });
     
-    // 计算最终战绩
     const avgRating = selectedPlayers.reduce((sum, p) => sum + p.rating, 0) / 5;
     const chemistry = calculateChemistry();
-    const randomness = Math.random() * 12 - 6; // -6 到 +6 波动
+    const randomness = Math.random() * 14 - 7;
     
-    let wins = Math.floor(avgRating * 0.75 + chemistry + randomness);
-    wins = Math.max(55, Math.min(82, wins)); // 限制范围
+    let wins = Math.floor(avgRating * 0.78 + chemistry + randomness);
+    wins = Math.max(58, Math.min(82, wins));
     
     const losses = 82 - wins;
     
-    let comment = "";
-    if (wins >= 80) comment = "🏆 接近完美！历史级阵容！";
-    else if (wins >= 75) comment = "🔥 非常出色！季后赛冠军级别";
-    else if (wins >= 70) comment = "👍 强队表现";
-    else comment = "继续努力，下次会更好！";
+    let comment = wins >= 80 ? "🏆 历史级完美阵容！" :
+                  wins >= 76 ? "🔥 极强冠军阵容！" :
+                  wins >= 72 ? "👍 非常出色的赛季" : "继续努力，下次冲刺82-0！";
     
     document.getElementById('result').innerHTML = `
         模拟战绩：<br>
         <span style="font-size:2.8em;">${wins} - ${losses}</span><br>
-        <span style="font-size:1.1em;">${comment}</span>
+        <span style="font-size:1.2em;">${comment}</span>
     `;
     
     document.getElementById('lineupSection').style.display = 'block';
@@ -203,15 +196,11 @@ function showResult() {
 function restartGame() {
     document.getElementById('lineupSection').style.display = 'none';
     document.getElementById('game').style.display = 'none';
-    startGame(); // 自动开始新的一局
+    startGame();
 }
 
 function showRules() {
-    alert("🎯 规则说明：\n\n" +
-          "1. 共5轮，每轮从随机球队+年代的球员池中选择1人\n" +
-          "2. 最终战绩由球员能力值 + 阵容相性 + 少量随机因素决定\n" +
-          "3. 能力值越高、球星越多、攻防搭配越合理，胜率越高\n" +
-          "4. 最高可达82-0，但需要极强阵容！");
+    alert("🎯 规则说明：\n\n1. 共5轮，每轮随机出现3名球员供你选择\n2. 从控球后卫到中锋各选1人\n3. 最终战绩由球员能力 + 阵容搭配合理度 + 运气决定\n4. 高能力球星越多，越容易获得高胜率！");
 }
 </script>
 </body>

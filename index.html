@@ -51,7 +51,7 @@
 </div>
 
 <script>
-// ==================== 球员数据库（已修复） ====================
+// ==================== 球员数据库 ====================
 const playersDB = {
     "PG": [
         {name:"魔术师约翰逊", team:"洛杉矶湖人", era:"1980s", rating:97, historical: true},
@@ -107,13 +107,20 @@ const playersDB = {
 
 let currentRound = 0;
 let selectedPlayers = [];
+
 const positions = ["PG", "SG", "SF", "PF", "C"];
 const posNames = {PG:"控球后卫", SG:"得分后卫", SF:"小前锋", PF:"大前锋", C:"中锋"};
 
 function startGame() {
-    document.getElementById('game').style.display = 'block';
-    currentRound = 0;
+    // 重要修复：彻底重置所有状态
     selectedPlayers = [];
+    currentRound = 0;
+    
+    document.getElementById('game').style.display = 'block';
+    document.getElementById('lineupSection').style.display = 'none';
+    document.getElementById('pool').innerHTML = '';
+    document.getElementById('lineup').innerHTML = '';   // 清空阵容
+    
     nextRound();
 }
 
@@ -132,14 +139,11 @@ function nextRound() {
     poolDiv.innerHTML = '';
     
     let pool = [...playersDB[pos]];
-    
-    // 加权随机：现役球员概率更高
     pool.sort((a, b) => {
         const aWeight = a.historical ? 0.25 : 1;
         const bWeight = b.historical ? 0.25 : 1;
         return Math.random() * bWeight - Math.random() * aWeight;
     });
-    
     pool = pool.slice(0, 3);
     
     pool.forEach(player => {
@@ -174,7 +178,8 @@ function calculateChemistry() {
 
 function showResult() {
     const lineupDiv = document.getElementById('lineup');
-    lineupDiv.innerHTML = '';
+    lineupDiv.innerHTML = '';   // 每次都彻底清空
+    
     selectedPlayers.forEach(p => {
         const div = document.createElement('div');
         div.className = 'player-slot';
@@ -185,10 +190,8 @@ function showResult() {
     const avgRating = selectedPlayers.reduce((sum, p) => sum + p.rating, 0) / 5;
     const chemistry = calculateChemistry();
     const randomness = Math.random() * 12 - 8;
-    
     let wins = Math.floor(avgRating * 0.68 + chemistry + randomness);
     wins = Math.max(52, Math.min(82, wins));
-    
     const losses = 82 - wins;
     
     const comment = wins >= 78 ? "🏆 接近完美！极罕见" :
@@ -206,11 +209,11 @@ function showResult() {
 function restartGame() {
     document.getElementById('lineupSection').style.display = 'none';
     document.getElementById('game').style.display = 'none';
-    startGame();
+    startGame();   // 调用 startGame 彻底重置
 }
 
 function showRules() {
-    alert("🎯 规则：\n1. 历史传奇球员出现概率大幅降低\n2. 每轮只显示3名球员\n3. 现役球员为主，更具挑战性\n4. 高胜率需要极强阵容搭配！");
+    alert("🎯 规则：\n1. 历史传奇球员出现概率低\n2. 每轮只显示3名球员\n3. 选满5人后自动结算");
 }
 </script>
 </body>

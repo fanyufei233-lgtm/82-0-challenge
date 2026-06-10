@@ -51,7 +51,7 @@
 </div>
 
 <script>
-// ==================== 球员数据库 ====================
+// ==================== 球员数据库（保持你原来的数据） ====================
 const playersDB = {
     "PG": [
         {name:"魔术师约翰逊", team:"洛杉矶湖人", era:"1980s", rating:97, historical: true},
@@ -107,20 +107,15 @@ const playersDB = {
 
 let currentRound = 0;
 let selectedPlayers = [];
-
 const positions = ["PG", "SG", "SF", "PF", "C"];
 const posNames = {PG:"控球后卫", SG:"得分后卫", SF:"小前锋", PF:"大前锋", C:"中锋"};
 
 function startGame() {
-    // 重要修复：彻底重置所有状态
     selectedPlayers = [];
     currentRound = 0;
-    
     document.getElementById('game').style.display = 'block';
     document.getElementById('lineupSection').style.display = 'none';
-    document.getElementById('pool').innerHTML = '';
-    document.getElementById('lineup').innerHTML = '';   // 清空阵容
-    
+    document.getElementById('lineup').innerHTML = '';
     nextRound();
 }
 
@@ -163,9 +158,17 @@ function nextRound() {
 
 function selectPlayer(player, card, pos) {
     selectedPlayers.push({ ...player, position: posNames[pos], posKey: pos });
+    
+    // 高亮选中
     document.querySelectorAll('.player-card').forEach(c => c.classList.remove('selected'));
     card.classList.add('selected');
-    document.getElementById('nextBtn').style.display = 'inline-block';
+    
+    // 第5轮选择后自动进入结果
+    if (currentRound === 5) {
+        setTimeout(showResult, 300);   // 稍作延迟，增加流畅感
+    } else {
+        document.getElementById('nextBtn').style.display = 'inline-block';
+    }
 }
 
 function calculateChemistry() {
@@ -178,7 +181,7 @@ function calculateChemistry() {
 
 function showResult() {
     const lineupDiv = document.getElementById('lineup');
-    lineupDiv.innerHTML = '';   // 每次都彻底清空
+    lineupDiv.innerHTML = '';
     
     selectedPlayers.forEach(p => {
         const div = document.createElement('div');
@@ -209,11 +212,11 @@ function showResult() {
 function restartGame() {
     document.getElementById('lineupSection').style.display = 'none';
     document.getElementById('game').style.display = 'none';
-    startGame();   // 调用 startGame 彻底重置
+    startGame();
 }
 
 function showRules() {
-    alert("🎯 规则：\n1. 历史传奇球员出现概率低\n2. 每轮只显示3名球员\n3. 选满5人后自动结算");
+    alert("🎯 规则：\n1. 共5轮，每轮选1人\n2. 第5轮选择后自动显示最终结果");
 }
 </script>
 </body>

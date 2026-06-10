@@ -17,6 +17,7 @@
     .player-pool { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin: 30px 0; }
     .player-card { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; cursor: pointer; transition: 0.3s; }
     .player-card:hover { background: rgba(255,215,0,0.3); transform: scale(1.05); }
+    .player-card.disabled { opacity: 0.6; cursor: not-allowed; }
     .selected { border: 3px solid gold; background: rgba(255,215,0,0.2); }
     .lineup { display: flex; justify-content: center; flex-wrap: wrap; gap: 20px; margin: 40px 0; }
     .player-slot { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; min-width: 160px; }
@@ -107,12 +108,15 @@ const playersDB = {
 
 let currentRound = 0;
 let selectedPlayers = [];
+let isSelecting = false;   // 防止重复点击
+
 const positions = ["PG", "SG", "SF", "PF", "C"];
 const posNames = {PG:"控球后卫", SG:"得分后卫", SF:"小前锋", PF:"大前锋", C:"中锋"};
 
 function startGame() {
     selectedPlayers = [];
     currentRound = 0;
+    isSelecting = false;
     document.getElementById('game').style.display = 'block';
     document.getElementById('lineupSection').style.display = 'none';
     document.getElementById('lineup').innerHTML = '';
@@ -132,6 +136,7 @@ function nextRound() {
     const pos = positions[currentRound-1];
     const poolDiv = document.getElementById('pool');
     poolDiv.innerHTML = '';
+    isSelecting = true;
     
     let pool = [...playersDB[pos]];
     pool.sort((a, b) => {
@@ -157,17 +162,21 @@ function nextRound() {
 }
 
 function selectPlayer(player, card, pos) {
-    // 关键修复：防止重复添加
-    if (selectedPlayers.length >= 5) return;
+    if (!isSelecting || selectedPlayers.length >= 5) return;
     
     selectedPlayers.push({ ...player, position: posNames[pos], posKey: pos });
     
-    document.querySelectorAll('.player-card').forEach(c => c.classList.remove('selected'));
+    // 高亮选中
+    document.querySelectorAll('.player-card').forEach(c => {
+        c.classList.remove('selected');
+        c.classList.add('disabled');
+        c.onclick = null;   // 禁用所有点击
+    });
     card.classList.add('selected');
     
-    // 第5轮选择后自动显示结果
     if (currentRound === 5) {
-        setTimeout(showResult, 400);
+        isSelecting = false;
+        setTimeout(showResult, 500);
     } else {
         document.getElementById('nextBtn').style.display = 'inline-block';
     }
@@ -185,7 +194,6 @@ function showResult() {
     const lineupDiv = document.getElementById('lineup');
     lineupDiv.innerHTML = '';
     
-    // 只显示前5个（保险措施）
     selectedPlayers.slice(0, 5).forEach(p => {
         const div = document.createElement('div');
         div.className = 'player-slot';
@@ -219,7 +227,7 @@ function restartGame() {
 }
 
 function showRules() {
-    alert("🎯 规则：\n1. 共5轮，每轮选1人\n2. 第5轮选择后自动显示最终阵容");
+    alert("🎯 规则：\n1. 每轮只能选择1名球员\n2. 第5轮选择后自动显示最终结果");
 }
 </script>
 </body>
